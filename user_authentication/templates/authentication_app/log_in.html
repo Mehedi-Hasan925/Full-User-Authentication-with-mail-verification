@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title_block %}
+
+{% endblock title_block %}
+
+
+{% block body_block %}
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-2"></div>
+                <div class="col-md-8 text-center">
+
+                    <div class="card mt-5" style="width: 27rem;">
+                        <img src="{% static 'images/instagram2.jpg' %}" class="card-img-top " alt="Instagram" style="height: 90px; width: 100%;" >
+                        <div class="card-body">
+                          <a href="#" class="btn btn-primary"><i style="margin-right: 8px; border-radius: 50%; display: inline-block; height: 20px;width: 20px;background-color: white; font-size: 20px;text-align: center;color: #0B5ED7;" class="fa fa-facebook text-center" aria-hidden="true"></i>Login with Facebook</a>
+                        
+                          <div class="row mt-2">
+                              <div class="col-md-5"><hr></div>
+                              <div class="col-md-2"><p class="text-muted">OR</p></div>
+                              <div class="col-md-5"><hr></div>
+                          </div>
+                          {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-success">{{ message }}</div>
+                            {% endfor %}
+                          {% endif %}
+                          <form action="" method="POST">
+                            {{ form|crispy }}
+                              {% csrf_token %}
+                              <input type="submit" name="submit" value="Log In" class="form-control btn btn-success">
+                          </form>
+                        </div>
+                    </div>
+
+                    <div class="card mt-2 mb-2" style="width: 27rem;">
+                            <h5 class="card-title pt-1">Don't have an account? <a href="{% url 'authentication_app:sign_up' %}" style="text-decoration: none;">Sign Up</a></h5>
+                    </div>
+                    
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+        </div>
+        <div class="col-md-2"></div>
+    </div>
+{% endblock body_block %}

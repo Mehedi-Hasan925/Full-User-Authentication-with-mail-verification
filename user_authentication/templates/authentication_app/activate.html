@@ -1,0 +1,6 @@
+{% autoescape off %}
+
+    Hi {{ user.username }},
+    Please click the below link to verify your explore account
+    http://{{domain}}{% url 'authentication_app:activate' uidb64=uidb64 token=token %}
+{% endautoescape %}
