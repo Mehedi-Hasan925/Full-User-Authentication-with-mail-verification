@@ -133,5 +133,5 @@ MEDIA_ROOT = media_dir
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'explore.authentication@gmail.com'
-EMAIL_HOST_PASSWORD = '$testemailpassword$'
+EMAIL_HOST_PASSWORD = '$test email password $'
 EMAIL_USE_TLS = True
