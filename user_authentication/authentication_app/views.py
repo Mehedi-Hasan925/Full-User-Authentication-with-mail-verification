@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login,authenticate,logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse,reverse_lazy
-from django.contrib.auth.forms import UserCreationForm,AuthenticationForm,UserChangeForm,PasswordChangeForm
+from django.contrib.auth.forms import UserCreationForm,AuthenticationForm,UserChangeForm,PasswordChangeForm,PasswordResetForm
 from django.contrib import messages
 from django.utils.encoding import force_bytes,force_text,DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
@@ -15,6 +15,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.generic import View
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 # Create your views here.
 def sign_up(request):
@@ -122,3 +123,73 @@ def Log_out(request):
     logout(request)
     messages.add_message(request,messages.INFO, 'Logout successfully')
     return HttpResponseRedirect(reverse('authentication_app:log_in'))
+
+
+def PasswordResetEmail(request):
+    form = forms.ResetPasswordForm()
+    # form = forms.SetNewPassword(request.user)
+    # form = forms.ChangePasswordForm(request.user)
+    # form = PasswordChangeForm(request.user)
+    if request.method == 'POST':
+        form = forms.ResetPasswordForm(data=request.POST)
+        if form.is_valid():
+            email_acc = form.cleaned_data.get('email')
+            user = User.objects.filter(email = email_acc)
+            print(email_acc)
+            if user.exists():
+                # create doamin
+                #relative url to verification
+                #encode uid 
+                #token
+                uidb64 = urlsafe_base64_encode(force_bytes(user[0].pk))
+                token = PasswordResetTokenGenerator().make_token(user[0])
+                domain = get_current_site(request).domain
+                relative_url = reverse('authentication_app:reset_password_valid_link', kwargs={'uidb64':uidb64,'token':token})
+                # activate_url ='https://'+domain+relative_url
+                activate_url ='http://'+domain+relative_url
+
+                email_body = "Hello"+", \n" +"Your username is "+user[0].username + "\nFollow the below link to Reset your Explore account Password\n" + activate_url
+                email_subject = 'Reset Your Password'
+                email_message = EmailMessage(
+                email_subject,
+                email_body,
+                settings.EMAIL_HOST_USER,
+                [email_acc],
+                )
+                email_message.send()
+                messages.add_message(request,messages.SUCCESS,'Check your Email to Reset Password')
+                HttpResponseRedirect(reverse('authentication_app:password_reset_email'))
+
+            else:
+                messages.add_message(request,messages.SUCCESS,'Check your Email to Reset Password')
+                HttpResponseRedirect(reverse('authentication_app:sign_up'))
+                
+    diction = {'form':form}
+    return render(request,'authentication_app/password_reset_email.html',context=diction)
+
+
+
+def ResetPasswordValidLink(request,uidb64,token):
+    uid = force_text(urlsafe_base64_decode(uidb64))
+    user = User.objects.get(pk=uid)
+    if PasswordResetTokenGenerator().check_token(user,token):
+        return HttpResponseRedirect(reverse('authentication_app:set_new_password', kwargs={'user':user}))
+
+    return render(request,'authentication_app/activate_fail.html')
+
+
+def SetNewPassword(request,user):
+    user = User.objects.filter(username=user)
+    form = forms.SetNewPassword(user[0])
+    if request.method == 'POST':
+        form = forms.SetNewPassword(user[0],request.POST)
+        if form.is_valid():
+            form.save()
+            messages.add_message(request,messages.SUCCESS,'Password reset Successfully! Please Log in')
+            return HttpResponseRedirect(reverse('authentication_app:log_in'))
+        
+        else:
+            print('form is invalid')
+
+    diction = {'form':form}
+    return render(request,'authentication_app/set_new_password.html',context=diction)
